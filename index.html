@@ -1,0 +1,192 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex,nofollow"><script src="config.js"></script>
+<title>Model Match</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: a neutral grey viewing booth, three images on top, the questions below. Single look on purpose: a mid-dark grey surround does not bias colour judgement. */
+:root{color-scheme:dark;--bg:#2b2c2e;--panel:#35373a;--line:#4a4d51;--fg:#eceded;--fg2:#e2e4e5;--a:#57c1cf;--b:#f0a35e;--photo:#d9d9d9;--ok:#8fd19e;--bad:#f08a80;
+--sans:"IBM Plex Sans",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:19px/1.4 var(--sans)}
+.wrap{max-width:2400px;margin:0 auto;padding-block:14px 32px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:12px}
+header{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
+h1{font-size:26px;font-weight:600;margin:0}
+h2{font-size:30px;font-weight:600;margin:0;text-wrap:balance}
+.prog{flex:1;min-width:120px;height:6px;background:var(--panel);border-radius:3px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--fg2)}
+.count,.mono{font-family:var(--mono);font-size:17px;color:var(--fg2);font-variant-numeric:tabular-nums}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{font:500 17px var(--sans);color:var(--fg2);background:transparent;border:0;padding:6px 12px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+button:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.imgs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.tg{font:600 20px var(--sans);width:min(320px,100%);height:46px;align-self:center;background:#ffd24a;color:#2b2206;border:2px solid #ffd24a;border-radius:6px;cursor:pointer}
+.tg[aria-pressed="true"]{background:var(--fg);border-color:var(--fg);color:var(--bg)}
+fig,.fig{display:flex;flex-direction:column;gap:4px;min-width:0}
+.cap{display:flex;justify-content:center;gap:8px;font-weight:600;font-size:21px}
+.cap small{font-weight:400;color:var(--fg2)}
+.cap.A{color:var(--a)}.cap.B{color:var(--b)}.cap.P{color:var(--photo)}
+.im{width:100%;aspect-ratio:3/2;background-color:var(--panel);background-repeat:no-repeat;cursor:zoom-in;border:0;padding:0;display:block;border-radius:3px}
+.tools{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;color:var(--fg2);font-size:17px}
+kbd{font:500 12px var(--mono);border:1px solid var(--line);border-radius:3px;padding:0 4px;color:var(--fg)}
+.q{display:grid;gap:6px;width:fit-content;max-width:100%;margin-inline:auto}
+.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 10px;align-items:center;padding:7px 12px;background:var(--panel);border-radius:5px;border:1px solid transparent}
+.row.cur{border-color:var(--fg2)}
+.row b{display:block;font-weight:600;font-size:21px;line-height:1.25}.row span{display:block;color:var(--fg2);font-size:19px;line-height:1.3}
+.ch{display:inline-flex;gap:6px}
+.ch button{font:600 18px var(--sans);min-width:80px;min-height:46px;background:transparent;color:var(--fg);border:1px solid var(--line);border-radius:5px;cursor:pointer}
+.ch button.A[aria-pressed="true"]{background:var(--a);border-color:var(--a);color:#10272b}
+.ch button.B[aria-pressed="true"]{background:var(--b);border-color:var(--b);color:#30200f}
+.ch button.S[aria-pressed="true"]{background:var(--fg2);border-color:var(--fg2);color:#202123}
+.foot{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;width:100%;max-width:1180px;margin-inline:auto}
+.go{font:600 20px var(--sans);background:var(--fg);color:var(--bg);border:0;border-radius:6px;padding:9px 22px;cursor:pointer}
+.go:disabled{opacity:.35;cursor:default}
+.card{max-width:68ch;margin:6vh auto 0;display:flex;flex-direction:column;gap:12px}
+.card p{margin:0;color:var(--fg2)}
+.card ul{margin:0;padding-left:20px;color:var(--fg2);display:grid;gap:4px}
+label{display:flex;gap:8px;align-items:center;color:var(--fg2)}
+input{font:inherit;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:5px;padding:5px 8px}
+.note{font-size:17px;color:var(--fg2)}
+.lb{position:fixed;inset:0;background:#1b1c1d;display:flex;flex-direction:column;gap:8px;padding:calc(10px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));z-index:10}
+.lbbar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;color:var(--fg2);font-size:17px}
+.lbbar .x{margin-left:auto}
+.btn{font:500 17px var(--sans);background:transparent;color:var(--fg);border:1px solid var(--line);border-radius:5px;padding:5px 11px;cursor:pointer}
+.lbv{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+#lbi{background-repeat:no-repeat;cursor:grab;touch-action:none;background-color:#000}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:18px;font-variant-numeric:tabular-nums}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}th{color:var(--fg2);font-weight:500}
+.bar{position:relative;width:180px;height:12px}.bar i{position:absolute;top:5px;height:2px;background:var(--fg2)}.bar b{position:absolute;top:2px;width:8px;height:8px;border-radius:50%;background:var(--fg);margin-left:-4px}
+@media(max-width:760px){.imgs{grid-template-columns:minmax(0,1fr)}.row{grid-template-columns:minmax(0,1fr);text-align:left}.ch{width:100%}.ch button{flex:1}}
+</style>
+</head><body>
+<div class="wrap" id="app"><p class="note">Loading the study.</p></div>
+<div class="lb" id="lb" hidden>
+  <div class="lbbar"><div class="seg" id="lbseg"></div><button class="btn" id="zo" aria-label="Zoom out">−</button><span class="mono" id="zl">100%</span><button class="btn" id="zi" aria-label="Zoom in">+</button><button class="btn" id="zr">Fit</button><span>Switching keeps the same zoom. Scroll to zoom, drag to pan.</span><button class="btn x" id="lbx">Close</button></div>
+  <div class="lbv" id="lbv"><div id="lbi" role="img" aria-label="Enlarged image"></div></div>
+</div>
+<script>
+const STIM = {"scenes":[{"id":"06bc6d1b24","cat":"single/simple","views":4,"methods":["astra_low","astra_high","astra_max","opus_low","opus_high","opus_xhigh","argon_low","argon_medium","argon_high","glm","kimi","deepseek","qwenflash","qwen27","gemma"]},{"id":"7c31a42404","cat":"single/simple","views":4,"methods":["astra_low","astra_high","astra_max","opus_low","opus_high","opus_xhigh","argon_low","argon_medium","argon_high","glm","kimi","deepseek","qwenflash","qwen27","gemma"]},{"id":"77b40ce601","cat":"single/simple","views":16,"methods":["astra_low","astra_high","astra_max","opus_low","opus_high","opus_xhigh","argon_low","argon_medium","argon_high","glm","kimi","deepseek","qwenflash","qwen27","gemma"]},{"id":"6bd39ac392","cat":"single/simple","views":6,"methods":["astra_low","astra_high","astra_max","opus_low","opus_high","opus_xhigh","argon_low","argon_medium","argon_high","glm","kimi","deepseek","qwenflash","qwen27","gemma"]},{"id":"c00b855082","cat":"single/simple","views":5,"methods":["astra_low","astra_high","astra_max","opus_low","opus_high","opus_xhigh","argon_low","argon_medium","argon_high","glm","kimi","deepseek","qwenflash","qwen27","gemma"]},{"id":"635852d56e","cat":"single/complex","views":9,"methods":["astra_low","astra_high","astra_max","opus_low","opus_high","opus_xhigh","argon_low","argon_medium","argon_high","glm","kimi","deepseek","qwenflash","qwen27","gemma"]},{"id":"a9e4791c7e","cat":"single/complex","views":12,"methods":["astra_low","astra_high","astra_max","opus_low","opus_high","opus_xhigh","argon_low","argon_medium","argon_high","glm","kimi","deepseek","qwenflash","qwen27","gemma"]},{"id":"d415cc449b","cat":"single/complex","views":24,"methods":["astra_low","astra_high","astra_max","opus_low","opus_high","opus_xhigh","argon_low","argon_medium","argon_high","glm","kimi","deepseek","qwenflash","qwen27","gemma"]},{"id":"7cd2ac43b4","cat":"single/complex","views":11,"methods":["astra_low","astra_high","astra_max","opus_low","opus_high","opus_xhigh","argon_low","argon_medium","argon_high","glm","kimi","deepseek","qwenflash","qwen27","gemma"]},{"id":"27dc178a3d","cat":"single/complex","views":4,"methods":["astra_low","astra_high","astra_max","opus_low","opus_high","opus_xhigh","argon_low","argon_medium","argon_high","glm","kimi","deepseek","qwenflash","qwen27","gemma"]},{"id":"fb893ffaf3","cat":"multi/simple","views":13,"methods":["astra_low","astra_high","astra_max","opus_low","opus_high","opus_xhigh","argon_low","argon_medium","argon_high","glm","kimi","deepseek","qwenflash","qwen27","gemma"]},{"id":"2a1b555966","cat":"multi/simple","views":16,"methods":["astra_low","astra_high","astra_max","opus_low","opus_high","opus_xhigh","argon_low","argon_medium","argon_high","glm","kimi","deepseek","qwenflash","qwen27","gemma"]},{"id":"ac250f0ead","cat":"multi/simple","views":11,"methods":["astra_low","astra_high","astra_max","opus_low","opus_high","opus_xhigh","argon_low","argon_medium","argon_high","glm","kimi","deepseek","qwenflash","qwen27","gemma"]},{"id":"3caf4324fd","cat":"multi/simple","views":9,"methods":["astra_low","astra_high","astra_max","opus_low","opus_high","opus_xhigh","argon_low","argon_medium","argon_high","glm","kimi","deepseek","qwenflash","qwen27","gemma"]},{"id":"390eda9157","cat":"multi/simple","views":11,"methods":["astra_low","astra_high","astra_max","opus_low","opus_high","opus_xhigh","argon_low","argon_medium","argon_high","glm","kimi","deepseek","qwenflash","qwen27","gemma"]},{"id":"29c7afafed","cat":"multi/complex","views":10,"methods":["astra_low","astra_high","astra_max","opus_low","opus_high","opus_xhigh","argon_low","argon_medium","argon_high","glm","kimi","deepseek","qwenflash","qwen27","gemma"]},{"id":"182932a4f3","cat":"multi/complex","views":15,"methods":["astra_low","astra_high","astra_max","opus_low","opus_high","opus_xhigh","argon_low","argon_medium","argon_high","glm","kimi","deepseek","qwenflash","qwen27","gemma"]},{"id":"cec8312f4e","cat":"multi/complex","views":9,"methods":["astra_low","astra_high","astra_max","opus_low","opus_high","opus_xhigh","argon_low","argon_medium","argon_high","glm","kimi","deepseek","qwenflash","qwen27","gemma"]},{"id":"d593a4f87a","cat":"multi/complex","views":14,"methods":["astra_low","astra_high","astra_max","opus_low","opus_high","opus_xhigh","argon_low","argon_medium","argon_high","glm","kimi","deepseek","qwenflash","qwen27","gemma"]},{"id":"a31b2ef388","cat":"multi/complex","views":10,"methods":["astra_low","astra_high","astra_max","opus_low","opus_high","opus_xhigh","argon_low","argon_medium","argon_high","glm","kimi","deepseek","qwenflash","qwen27","gemma"]}],"names":{"astra_low":"GPT-6 Astra (low)","astra_high":"GPT-6 Astra (high)","astra_max":"GPT-6 Astra (max)","opus_low":"Claude Opus 5.5 (low)","opus_high":"Claude Opus 5.5 (high)","opus_xhigh":"Claude Opus 5.5 (xhigh)","argon_low":"Gemini 4 Argon (low)","argon_medium":"Gemini 4 Argon (medium)","argon_high":"Gemini 4 Argon (high)","glm":"GLM-5.3 Flash (max)","kimi":"Kimi K3.1 Pro (max)","deepseek":"DeepSeek V4.1 Flash (max)","qwenflash":"Qwen3.8-Flash-Next (max)","qwen27":"Qwen3.8-27B (xhigh)","gemma":"Gemma 4 31B (high)"}};
+const ASPECTS = [   // v2 (2026-11-04): four questions; Objects merges completeness and similarity. Keys kept so earlier votes still count.
+ {k:'objects', n:'Objects', q:'Which reconstructs the objects in the photo more completely and more faithfully, with fewer missing, extra or wrong-looking ones?'},
+ {k:'layout', n:'Layout', q:'Which places the objects and room surfaces more like the photo?'},
+ {k:'image', n:'Appearance', q:'Which image as a whole looks more like the photo?'},
+ {k:'overall', n:'Overall', q:'If you could keep only one reconstruction of this view, which would you keep?'}];
+const QV = 2;
+const SESSION = 30, PRIOR = 1;   // no side-swapped repeats (user, 2026-11-10)
+/*ENGINE*/
+// Rating: Gaussian (mean, variance) per aspect, scene and method, logistic win model; a tie counts as half a win.
+function ratings(votes){
+  const R = {}, get = (a,s,m) => (R[a+'|'+s+'|'+m] ??= {mu:0, v:PRIOR, n:0});
+  for (const x of votes) for (const a of Object.keys(x.ans||{})) {
+    const y = {a:1, b:0, s:.5}[x.ans[a]]; if (y===undefined) continue;
+    const A = get(a,x.scene,x.a), B = get(a,x.scene,x.b), p = 1/(1+Math.exp(B.mu-A.mu)), I = p*(1-p), D = 1+(A.v+B.v)*I, e = y-p;
+    const am = A.mu+A.v*e/D, bm = B.mu-B.v*e/D, av = A.v-A.v*A.v*I/D, bv = B.v-B.v*B.v*I/D;
+    A.mu=am; B.mu=bm; A.v=Math.max(av,1e-3); B.v=Math.max(bv,1e-3); A.n++; B.n++;
+  }
+  return {R, get};
+}
+// Elo-style match: the least-played method of the least-played scene meets the method rated closest to it (jitter avoids everyone getting the same pair).
+function nextPair(votes, stim, seen, rnd=Math.random){
+  const {get} = ratings(votes), load = s => stim.scenes.find(x=>x.id===s);
+  const cnt = {}; for (const s of stim.scenes) cnt[s.id]=0; for (const x of votes) if (x.scene in cnt) cnt[x.scene]++;
+  const sc = [...stim.scenes].sort((p,q)=>cnt[p.id]-cnt[q.id]+(rnd()-.5))[0], ms = sc.methods;
+  const a = [...ms].sort((p,q)=>get('overall',sc.id,p).n-get('overall',sc.id,q).n+rnd()*.5-.25)[0], ma = get('overall',sc.id,a).mu;
+  const key = (p,q) => sc.id+'|'+[p,q].sort().join('|');
+  const opp = ms.filter(m=>m!==a && !seen.has(key(a,m))), pool = opp.length?opp:ms.filter(m=>m!==a);
+  const b = [...pool].sort((p,q)=>Math.abs(get('overall',sc.id,p).mu-ma)-Math.abs(get('overall',sc.id,q).mu-ma)+(rnd()-.5)*.3)[0];
+  const uses = Array(sc.views).fill(0); for (const x of votes) if (x.scene===sc.id) uses[x.view]=(uses[x.view]||0)+1;
+  const low = Math.min(...uses), vs = uses.map((u,i)=>u===low?i:-1).filter(i=>i>=0);
+  return {scene:sc.id, a, b, view:vs[Math.floor(rnd()*vs.length)], left:rnd()<.5?'a':'b'};
+}
+function summary(votes, stim, aspect){
+  const {get} = ratings(votes), ids = new Set(stim.scenes.flatMap(s=>s.methods));
+  return [...ids].map(m => { const sc = stim.scenes.filter(s=>s.methods.includes(m)), r = sc.map(s=>get(aspect,s.id,m));
+    return {m, mu:r.reduce((t,x)=>t+x.mu,0)/r.length, ci:1.96*Math.sqrt(r.reduce((t,x)=>t+x.v,0))/r.length, n:r.reduce((t,x)=>t+x.n,0), scenes:r.length}; }).sort((p,q)=>q.mu-p.mu);
+}
+/*END*/
+let uid='', votes=[], name='Anonymous', S=null;
+const save=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}, load=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
+const EP=(window.STUDY_ENDPOINT||'').trim();
+let queue=(()=>{try{return JSON.parse(load('mm_queue')||'[]')}catch(e){return []}})(), sending=null;
+const saveQ=()=>save('mm_queue',JSON.stringify(queue));
+async function sendOne(rec){ const r=await fetch(EP,{method:'POST',body:JSON.stringify(rec)}); const j=await r.json(); if(!j.ok) throw new Error(j.error||'refused'); }
+function flush(){ if(!EP) return Promise.resolve(false); if(sending) return sending;
+  sending=(async()=>{ while(queue.length){ try{ await sendOne(queue[0]); queue.shift(); saveQ(); }catch(e){ return false; } } return true; })().finally(()=>{sending=null;});
+  return sending; }
+async function pull(){ if(!EP) return; const ac=new AbortController(), tm=setTimeout(()=>ac.abort(),10000);
+  try{ const r=await fetch(EP,{signal:ac.signal}); const j=await r.json(); if(Array.isArray(j.votes)){ const ids=new Set(j.votes.map(v=>v.id)); votes=j.votes.concat(queue.filter(v=>!ids.has(v.id))); } }catch(e){} finally{ clearTimeout(tm); } }
+const $=id=>document.getElementById(id), app=$('app');
+const src=(sc,k)=>`img/${sc}_${k}.jpg`;
+function sprite(el,sc,k,i,n){ el.style.backgroundImage=`url(${src(sc,k)})`; el.style.backgroundSize=`100% ${n*100}%`; el.style.backgroundPosition=`0 ${n>1?i/(n-1)*100:0}%`; }
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function newTrial(){
+  const mine=votes.filter(v=>v.rater===uid), seen=new Set(mine.map(v=>v.scene+'|'+[v.a,v.b].sort().join('|')));
+  S.done++;
+  S.t=nextPair(votes,STIM,seen);
+  S.ans={}; S.gt=false; S.t0=Date.now(); render();
+}
+const slots=()=>{const t=S.t, l=t.left==='a'?t.a:t.b, r=t.left==='a'?t.b:t.a; return [{id:'P',label:'Photo',k:'gt'},{id:'A',label:'Render A',k:l},{id:'B',label:'Render B',k:r}];};
+const viewsOf=sc=>STIM.scenes.find(s=>s.id===sc).views;
+function render(){
+  const t=S.t, sl=slots();
+  const cur=ASPECTS.findIndex(a=>!S.ans[a.k]);
+  app.innerHTML=`<header><h1>Which render matches the photo?</h1><div class="prog"><i style="width:${(S.done-1)/SESSION*100}%"></i></div><span class="count">${S.done} / ${SESSION}</span></header>
+  <div class="tools"><span>Click an image to enlarge it.</span></div>
+  <div class="imgs">${sl.map(s=>`<div class="fig"><div class="cap ${s.id}">${s.label}${S.gt&&s.id!=='P'?' <small>showing the photo</small>':''}</div><button class="im" data-z="${sl.indexOf(s)}" aria-label="Enlarge ${s.label}"></button></div>`).join('')}</div>
+  <button class="tg" id="tg" aria-pressed="${!!S.gt}">${S.gt?'Show renders':'Overlay Photo'}</button>
+  <div class="q">${ASPECTS.map((a,i)=>`<div class="row ${i===cur?'cur':''}"><div><b>${a.n}</b><span>${a.q}</span></div><div class="ch">${[['a','A','A'],['s','S','About equal'],['b','B','B']].map(([v,c,l])=>`<button class="${c}" data-a="${a.k}" data-v="${v}" aria-pressed="${S.ans[a.k]===v}">${l}</button>`).join('')}</div></div>`).join('')}</div>
+  <div class="foot"><span></span><button class="go" id="next" ${cur>=0?'disabled':''}>${S.done>=SESSION?'Submit and finish':'Submit and next'}</button></div>`;
+  app.querySelectorAll('.im').forEach(el=>{const i=+el.dataset.z; sprite(el,t.scene,S.gt?'gt':sl[i].k,t.view,viewsOf(t.scene)); el.onclick=()=>openLB(i);});
+  $('tg').onclick=()=>{S.gt=!S.gt; render();};
+  app.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>answer(b.dataset.a,b.dataset.v));
+  $('next').onclick=submit;
+}
+function answer(a,v){ S.ans[a]=v; render(); }
+async function submit(){
+  if(ASPECTS.some(a=>!S.ans[a.k])) return;
+  const t=S.t, flipV=v=>v==='s'?'s':(t.left==='a'?v:(v==='a'?'b':'a'));   // A / B on screen -> method a / b
+  const ans=Object.fromEntries(ASPECTS.map(a=>[a.k,flipV(S.ans[a.k])]));
+  const rec={ua:navigator.userAgent.slice(0,200),scene:t.scene,view:t.view,a:t.a,b:t.b,left:t.left,ans,rater:uid,name,session:S.session,ms:Date.now()-S.t0,t:new Date().toISOString(),kind:'human',repeat:!!t.repeat,qv:QV};
+  votes.push(rec); S.hist.push({scene:t.scene,view:t.view,a:t.a,b:t.b,left:t.left});
+  rec.id=uid+'_'+Date.now(); queue.push(rec); saveQ(); flush();
+  if(S.done>=SESSION) return finish(); newTrial();
+}
+async function finish(){ S=null; app.innerHTML=`<div class="card"><h2>Thank you</h2><p id="fs">Saving your answers…</p><div><button class="go" id="again">Do another round</button></div></div>`; $('again').onclick=start;
+  const ok=await flush(); const fs=$('fs'); if(!fs) return;
+  if(ok){ fs.textContent=`All ${SESSION} comparisons are saved. Another round takes about 20 minutes.`; }
+  else { fs.innerHTML='Some answers could not be sent yet. Please keep this page open; they are sent again automatically. <button class="btn" id="rs">Send now</button>'; $('rs').onclick=finish; } }
+function start(){ pull(); S={done:0,hist:[],session:uid.slice(0,12)+'_'+Date.now()}; newTrial(); }
+function intro(){
+  app.innerHTML=`<div class="card"><h2>Compare 3D reconstructions with a photo</h2><p>Each screen shows one real photo of a room and two renders of 3D reconstructions from the same camera. Decide which render matches the photo better.</p>
+  <ul><li>Four quick questions per screen, ${SESSION} screens, about 20 minutes.</li><li>Each screen is saved when you press Submit and next. You can stop at any time; coming back starts a new round.</li><li>Judge what you see. Render A and B change sides at random.</li><li>Pick About equal only when you truly cannot separate them.</li></ul>
+  <label for="nm">Your name <input id="nm" maxlength="60" autocomplete="name"></label>
+  <div><button class="go" id="st">Start</button></div>${EP?'':'<p class="note">The study is not open yet.</p>'}</div>`;
+  $('nm').value=name; $('nm').oninput=e=>{name=e.target.value.trim()||'Anonymous'; save('rm_name',name);}; $('st').onclick=start; if(!EP) $('st').disabled=true; 
+}
+const S0={aspect:'overall'};
+function route(){ if(!S) intro(); }
+// lightbox: one zoom and pan shared by the three images
+const L={z:1,x:0,y:0,i:0,on:false,w:0,h:0};
+function openLB(i){ L.i=i; L.z=1; L.x=0; L.y=0; L.on=true; $('lb').hidden=false; const sl=slots();
+  $('lbseg').innerHTML=sl.map((s,k)=>`<button data-l="${k}">${s.label}</button>`).join(''); $('lbseg').querySelectorAll('button').forEach(b=>b.onclick=()=>{L.i=+b.dataset.l; drawLB();}); sizeLB(); }
+function sizeLB(){ const v=$('lbv').getBoundingClientRect(); L.w=Math.min(v.width,v.height*1.5); L.h=L.w/1.5; const e=$('lbi'); e.style.width=L.w+'px'; e.style.height=L.h+'px'; drawLB(); }
+function drawLB(){ const t=S.t,n=viewsOf(t.scene),e=$('lbi'),k=slots()[L.i].k; L.x=Math.min(0,Math.max(L.w-L.w*L.z,L.x)); L.y=Math.min(0,Math.max(L.h-L.h*L.z,L.y));
+  e.style.backgroundImage=`url(${src(t.scene,k)})`; e.style.backgroundSize=`${L.w*L.z}px ${L.h*L.z*n}px`; e.style.backgroundPosition=`${L.x}px ${L.y-t.view*L.h*L.z}px`;
+  $('zl').textContent=Math.round(L.z*100)+'%'; $('lbseg').querySelectorAll('button').forEach((b,i)=>b.setAttribute('aria-pressed',i===L.i)); }
+function zoom(f,cx=L.w/2,cy=L.h/2){ const z=Math.max(1,Math.min(6,L.z*f)), r=z/L.z; L.x=cx-(cx-L.x)*r; L.y=cy-(cy-L.y)*r; L.z=z; drawLB(); }
+function closeLB(){ L.on=false; $('lb').hidden=true; }
+$('zi').onclick=()=>zoom(1.5); $('zo').onclick=()=>zoom(1/1.5); $('zr').onclick=()=>{L.z=1;L.x=L.y=0;drawLB();}; $('lbx').onclick=closeLB;
+$('lbi').addEventListener('wheel',e=>{e.preventDefault(); const b=e.currentTarget.getBoundingClientRect(); zoom(e.deltaY<0?1.2:1/1.2,e.clientX-b.left,e.clientY-b.top);},{passive:false});
+let drag=null; $('lbi').addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,lx:L.x,ly:L.y}; e.currentTarget.setPointerCapture(e.pointerId);});
+$('lbi').addEventListener('pointermove',e=>{ if(!drag) return; L.x=drag.lx+e.clientX-drag.x; L.y=drag.ly+e.clientY-drag.y; drawLB();});
+$('lbi').addEventListener('pointerup',()=>drag=null);
+addEventListener('resize',()=>{if(L.on) sizeLB();});
+addEventListener('hashchange',route);
+name=load('rm_name')||'Anonymous'; uid=load('rm_uid')||(()=>{const u='r'+Math.random().toString(36).slice(2,12); save('rm_uid',u); return u;})();
+route();
+pull().then(()=>{ if(!S) route(); }); flush(); setInterval(()=>{ if(queue.length) flush(); },30000);
+</script>
+
+</body></html>
